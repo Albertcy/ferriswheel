@@ -1,2 +1,2 @@
 # ferriswheel
-A simple fast comandline tools
+A simple fast command-line tools
