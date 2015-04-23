@@ -14,16 +14,21 @@ class FerrisWheel
      */
     static public function start($input, $output)
     {
-        $name = ucfirst($name = $input->getCommandName()) . 'Tools';
-        if (! class_exists($name)) {
-            $output->doWrite("command: '{$name}' does not exist.");
-            return false;
+        try {
+            $name = ucfirst($name = $input->getCommandName()) . 'Tools';
+            if (! class_exists($name)) {
+                throw new Exception("command: '{$name}' does not exist.");
+            }
+            $command = new $name();
+            
+            $command->run($input, $output);
+        } catch (Exception $e) {
+            $output->doWrite($e->getMessage());
         }
-        $command = new $name();
-        $command->run($input, $output);
     }
 
     /**
+     * 获取默认操作列表
      *
      * @param CommandLineOutput $output            
      */
@@ -48,8 +53,12 @@ class CommandLineInput
 
     public function __construct()
     {
-        $argv = $_SERVER['argv'];
-        array_shift($argv);
+        $argv = array_values($_GET);
+        // cli 模式
+        if (false !== strpos(php_sapi_name(), 'cli')) {
+            $argv = $_SERVER['argv'];
+            array_shift($argv);
+        }
         $this->tokens = $argv;
     }
 
@@ -90,7 +99,10 @@ class CommandLineOutput
 
     public function __construct()
     {
-        $this->stream = $this->hasStdoutSupport() ? fopen('php://stdout', 'w') : fopen('php://output');
+        if (false !== strpos(php_sapi_name(), 'cli'))
+            $this->stream = $this->hasStdoutSupport() ? fopen('php://stdout', 'w') : fopen('php://output', 'w');
+        else 
+            $this->stream = fopen('php://output', 'w');
     }
 
     /**
@@ -143,6 +155,22 @@ class XhprofTools
     }
 
     /**
+     * 重载方法
+     * 
+     * @param string $name            
+     * @param array $arguments            
+     */
+    public function __call($name, $arguments)
+    {
+        if (! empty($this->funcAlias[$name])) {
+            $name = $this->funcAlias[$name];
+            $this->$name();
+        } else {
+            throw new \RuntimeException('xhprof tools does not have command "' . $name . '"');
+        }
+    }
+
+    /**
      * 运行命令
      *
      * @param CommandLineInput $input            
@@ -151,13 +179,11 @@ class XhprofTools
     public function doCommand($input, $output)
     {
         $name = trim($input->getArgument(1), '-');
-        if (! empty($this->funcAlias[$name])) {
-            $name = $this->funcAlias[$name];
-        }
         $this->$name();
     }
 
     /**
+     * 帮助命令
      */
     public function help()
     {}
@@ -185,8 +211,7 @@ class XhprofTools
                 $this->error('warning: .evn file required. use : -install to initialize.');
             }
         }
-        if($install)
-        {
+        if ($install) {
             $this->output->doWrite('please restart apache for using all settings.');
         }
         if ($checkIni && $checkEvn) {
@@ -203,6 +228,20 @@ class XhprofTools
     }
 
     /**
+     * 下载分析数据
+     */
+    public function download()
+    {
+        $path = $this->packFile();
+        if (file_exists($path)) {
+            header('Content-Type:application/x-rar-compressed');
+            header('Content-Disposition: attachment; filename="' . basename($path) . '"');
+            file_put_contents('php://output', file_get_contents($path));
+            fflush('php:output');
+        }
+    }
+
+    /**
      * 检测配置文件
      *
      * @return boolean
@@ -214,6 +253,9 @@ class XhprofTools
 
     /**
      * 导入依赖文件
+     *
+     * @param string $filepath            
+     * @return boolean
      */
     private function importLibFiles($filepath = null)
     {
@@ -236,7 +278,8 @@ class XhprofTools
     private function packFile()
     {
         if ($path = $this->zipFile()) {
-            $this->output->doWrite($path);
+            // $this->output->msg($path);
+            return $path;
         } else {
             $this->error('zip file failed.');
         }
@@ -290,6 +333,9 @@ class XhprofTools
         return $fileList;
     }
 
+    /**
+     * 检查默认配置文件存放路径
+     */
     public function ckpath()
     {
         $this->output->doWrite($this->getTargetPath());
@@ -297,6 +343,8 @@ class XhprofTools
 
     /**
      * 获取默认配置目录
+     *
+     * @return boolean|string
      */
     private function getTargetPath()
     {
@@ -376,7 +424,7 @@ class XhprofTools
                 return true;
             }
         }
-        $this->error('php_xhprof.dll not found in extension diretory.', true);
+        $this->error('php_xhprof.dll not found in extension diretory.');
         return false;
     }
 
@@ -399,6 +447,8 @@ class XhprofTools
 
     /**
      * 获取导出文件路径
+     *
+     * @return string
      */
     private function getExportFilePath()
     {
@@ -411,25 +461,34 @@ class XhprofTools
 
     /**
      * 输出错误信息
-     * @param string $infos
+     *
+     * @param string $message
+     *            错误信息
+     * @param
+     *            bool throw 采用抛出异常方式
      * @param boolen $flush
+     *            刷新输出缓存
      */
-    private function error($infos, $flush = true)
+    private function error($message, $throw = true, $flush = true)
     {
-        if ($infos) {
-            $this->errorInfos[] = $infos;
-        }
-        if($flush)
-        {
-            foreach ($this->errorInfos as $item) {
-                $this->output->doWrite($item, true);
+        if ($throw) {
+            throw new RuntimeException($message);
+        } elseif ($message) {
+            $this->errorInfos[] = $message;
+            if ($flush) {
+                foreach ($this->errorInfos as $item) {
+                    $this->output->doWrite($item, true);
+                }
+                $this->errorInfos = array();
             }
-            $this->errorInfos = array();
         }
     }
 
     /**
      * 获取工具配置信息
+     *
+     * @param string $key            
+     * @return multitype:
      */
     private function getEnvSettings($key)
     {
@@ -453,11 +512,6 @@ class XhprofTools
         'xhprof_output' => '\\profiler'
     );
 
-    /**
-     * 工具配置信息
-     *
-     * @var array
-     */
     private $evnSettings = array();
 
     private $errorInfos;

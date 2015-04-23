@@ -87,7 +87,7 @@ class adapterProfiler implements ProfilerInterface
     public function isProfilerEnable()
     {}
 
-    public function enableAllService()
+    public function autoServiceProfile()
     {}
 }
 
@@ -124,10 +124,33 @@ class XhprofProfiler implements ProfilerInterface
     public function ini()
     {
         $this->parseSetting();
-        if ($this->getSetting('all_service')) {
+        if ($this->pageProfileAvailable()) {
+            $this->authorize();
+        }
+        if ($this->isServiceProfileAvailable()) {
             $this->registerShutdown();
         }
         return true;
+    }
+
+    /**
+     * 检测针对服务性能分析是否可用
+     *
+     * @return boolean
+     */
+    public function isServiceProfileAvailable()
+    {
+        return $this->autoServiceProfile() || $this->pageProfileavailable();
+    }
+
+    /**
+     * 页面性能分析是否可用
+     *
+     * @return boolean
+     */
+    private function pageProfileAvailable()
+    {
+        return $this->getSetting('page_profile') && $_GET['profile'];
     }
 
     /**
@@ -135,9 +158,33 @@ class XhprofProfiler implements ProfilerInterface
      *
      * @return boolean
      */
-    public function enableAllService()
+    private function autoServiceProfile()
     {
         return $this->getSetting('all_service');
+    }
+
+    /**
+     * 身份验证
+     */
+    private function authorize()
+    {
+        if (! isset($_SERVER['PHP_AUTH_USER']) || ! isset($_SERVER['PHP_AUTH_PW']) || $_SERVER['PHP_AUTH_USER'] != self::username || $_SERVER['PHP_AUTH_PW'] != self::passwd) {
+            if (headers_sent($file, $line)) {
+                $message = "warning: http header already sent. file: {$file} , at line {$line}.";
+            } else {
+                Header("WWW-Authenticate: Basic realm=\"Profile Login\"");
+                Header("HTTP/1.0 401 Unauthorized");
+            }
+            
+            echo <<<EOB
+				<html><body>
+				<h1>Rejected!</h1>
+				<big>Wrong Username or Password!</big>
+                <b>{$message}</b>
+				</body></html>
+EOB;
+            exit();
+        }
     }
 
     /**
@@ -187,7 +234,10 @@ class XhprofProfiler implements ProfilerInterface
     public function start($logPrefix = null, $setting = array())
     {
         $this->setProfileLogPrefix($logPrefix);
-        if ($this->enableAllService() && ! $this->isServiceMatch()) {
+        if ($this->pageProfileAvailable()) {
+            $this->authorize();
+        }
+        if ($this->autoServiceProfile() && ! $this->isServiceMatch()) {
             error_log('xhprof-tools [All Service Mode] : service name doest not match ' . $this->getSetting('service_name'));
             return false;
         }
@@ -222,13 +272,12 @@ class XhprofProfiler implements ProfilerInterface
      */
     public function doEnd()
     {
-        if ($this->enableAllService() && ! $this->isServiceMatch()) {
-            error_log('end : un match.' . $this->logPrefix . ' - ' . $this->getSetting('service_name'));
+        if ($this->autoServiceProfile() && ! $this->isServiceMatch()) {
+            error_log('xhprof end : un match.' . $this->logPrefix . ' - ' . $this->getSetting('service_name'));
             return false;
         }
         $xhprof_data = xhprof_disable();
         $run_id = $this->saveRun($xhprof_data, "xhprof_crm", $this->getProfileLogPrefix());
-        error_log('profile : finished');
         return $run_id;
     }
 
@@ -355,4 +404,8 @@ class XhprofProfiler implements ProfilerInterface
     private $logPrefix = '';
 
     private $configFile = '';
+
+    const username = 'admin';
+
+    const passwd = 'u8crm';
 }
