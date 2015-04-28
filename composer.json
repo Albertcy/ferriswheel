@@ -2,7 +2,7 @@
     "name": "ferriswheel/ferriswheel",
     "description": "Scan an array of URLs and report inaccessible URLs",
     "keywords": ["url", "scanner", "csv"],
-    "homepage": "albert.com",
+    "homepage": "http://albert.com",
     "license": "MIT",
     "authors": [
         {
