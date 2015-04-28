@@ -1,12 +1,12 @@
 {
-	"name" : "modernphp/scanner",
+	"name" : "ferriswheel/ferriswheel",
 	"description" : "Scan URLs from a CSV file and report inaccessible URLs",
 	"keywords" : ["url", "scanner", "csv"],
 	"homepage" : "http://example.com",
 	"license" : "MIT",
 	"authors" : [{
-			"name" : "Josh Lockhart",
-			"homepage" : "https://github.com/codeguy",
+			"name" : "albert cy",
+			"homepage" : "https://github.com/Albertcy",
 			"role" : "Developer"
 		}
 	],
