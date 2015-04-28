@@ -1,32 +1,27 @@
 {
-	"name" : "ferriswheel/ferriswheel",
-	"description" : "Scan URLs from a CSV file and report inaccessible URLs",
-	"keywords" : ["url", "scanner", "csv"],
-	"homepage" : "http://example.com",
-	"license" : "MIT",
-	"authors" : [{
-			"name" : "albert cy",
-			"homepage" : "https://github.com/Albertcy",
-			"role" : "Developer"
-		}
-	],
-	"support" : {
-		"email" : "help@example.com"
-	},
-	"require" : {
-		"php" : ">=5.4.0",
-		"guzzlehttp/guzzle" : "~5.0"
-	},
-	"require-dev" : {
-		"phpunit/phpunit" : "~4.3"
-	},
-	"suggest" : {
-		"league/csv" : "~6.0"
-	},
-	"autoload" : {
-		"psr-4" : {
-			"Oreilly\\ModernPHP\\" : "src/"
-		}
-	},
-	"version": "1.0.0"
+    "name": "ferriswheel/ferriswheel",
+    "description": "Scan an array of URLs and report inaccessible URLs",
+    "keywords": ["url", "scanner", "csv"],
+    "homepage": "albert.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "albert",
+            "homepage": "https://github.com/Albertcy/ferriswheel",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "albert@163.com"
+    },
+    "require": {
+        "php" : ">=5.4.0",
+        "guzzlehttp/guzzle": "~5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.3"
+    },
+    "suggest": {
+        "league/csv": "Lets you quickly parse URLs from CSV data into an array"
+    }
 }
