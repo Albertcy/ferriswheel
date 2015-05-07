@@ -319,8 +319,9 @@ class XhprofTools
     private function getExportFilePath()
     {
         if (empty($this->exportPath)) {
-            $this->exportPath = ini_get('xhprof.output_dir') ? ini_get('xhprof.output_dir') : realpath($this->defaultSettings['xhprof_output']);
+            $this->exportPath = ini_get('xhprof.output_dir') ? ini_get('xhprof.output_dir') : $this->defaultSettings['xhprof_output'];
             @mkdir($this->exportPath, 0777);
+			$this->exportPath = realpath($this->exportPath);
         }
         return $this->exportPath;
     }
@@ -375,7 +376,9 @@ class XhprofTools
     */
     private $defaultSettings = array(
         'all_service' => false,
-        'xhprof_output' => '\\profiler'
+        'xhprof_output' => '\\profiler',
+		'page_profile' => true,
+		'service_name' => ''
     );
 
     private $evnSettings = array();
