@@ -6,25 +6,21 @@
  * @date 2016-03-23
  * @version $1
  */
-interface GeneralAction {
+interface comm_interface_generallistaction {
 
     /**
-     * 获取列表参数
+     * 获取查询信息列表请求参数
      */
     public function getListRequestParams();
 
     /**
-     * 获取详情信息接口
+     * 列表参数校验
+     * @return bool
      */
-    public function getDetailRequestParams();
+    public function isListParamsVerified($params);
 
     /**
      * 获取列表信息
      */
-    public function getListInfos();
-
-    /**
-     * 获取详情信息
-     */
-    public function getDetailInfos();
+    public function getListInfos($params);
 }

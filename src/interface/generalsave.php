@@ -6,7 +6,7 @@
  * @date 2016-04-20
  * @version $1
  */
-interface GeneralSave {
+interface comm_interface_generalsave {
 
     /**
      * 获取合法的表单名

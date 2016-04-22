@@ -5,7 +5,7 @@
  * @author Richard
  *
  */
-interface GeneralAuthorize {
+interface comm_interface_generalauthorize {
 
     /**
      * 权限校验

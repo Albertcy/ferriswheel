@@ -4,7 +4,7 @@
  * 通用日志接口
  * @author Richard
  */
-interface GeneralLog {
+interface comm_interface_generallog {
 
     /**
      *

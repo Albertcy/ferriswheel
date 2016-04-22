@@ -4,7 +4,7 @@
  * @author Richard
  *
  */
-interface LoginCheck {
+interface comm_interface_logincheck {
 
     /**
      * 验证登录 否则跳转到指定页

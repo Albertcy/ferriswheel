@@ -6,7 +6,7 @@
  * @date 2016-03-30
  * @version $1
  */
-class GeneralActionHandle {
+class comm_routine_generalaction {
 
     /**
      * 操作日志类型
