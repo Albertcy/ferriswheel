@@ -14,12 +14,10 @@ function vbEncode($arg)
     $ret = null;
     $i = 0;
     while ($arg > 127) {
-        // $ret = $ret | (($arg & 127 | 128) << (8 * $i ++));
         $i ++;
         $ret = pack('C', ($arg & 127 | 128)) . $ret;
         $arg >>= 7;
     }
-    // $i > 0 ? ($ret |= $arg << (8 * $i)) : ($ret = $arg | 128);
     $i > 0 ? ($ret = pack('C', $arg) . $ret) : ($ret = pack('C', $arg));
     return $ret;
 }
@@ -32,16 +30,41 @@ function vbEncode($arg)
  */
 function vbDecode($arg)
 {
-    $ret = null;
+    $ret = array();
+    $i = - 1;
     $bits = unpack('C*', $arg);
-    $slen = count($bits);
-    foreach($bits as $byte){
-        $ret |= ($byte & 127 )<< (7 * --$slen);
+    foreach ($bits as $byte) {
+        0 == ($byte & 128) ? ++ $i : ($ret[$i] <<= 7);
+        $ret[$i] |= ($byte & 127);
     }
     return $ret;
 }
 
-function vbDecodebit($arg){
+/**
+ * variable byte code encode Integer Val
+ *
+ * @param int $arg            
+ * @return int
+ */
+function vbEncodeBit($arg)
+{
+    $ret = null;
+    $i = 0;
+    while ($arg > 127) {
+        $ret = $ret | (($arg & 127 | 128) << (8 * $i ++));
+        $arg >>= 7;
+    }
+    $i > 0 ? ($ret |= $arg << (8 * $i)) : ($ret = $arg | 128);
+    return $ret;
+}
+
+/**
+ *
+ * @param bytecode $arg            
+ * @return number
+ */
+function vbDecodebit($arg)
+{
     $ret = null;
     $i = 0;
     while (128 == ($arg & 128)) {
@@ -51,3 +74,9 @@ function vbDecodebit($arg){
     $i == 0 ? $ret = $arg & 127 : $ret |= $arg << (7 * $i);
     return $ret;
 }
+
+$enNum = vbEncode(12238) . vbEncode(2323) . vbEncode(35232) .vbEncode(23423);
+print_r(vbDecode($enNum));
+echo strlen($enNum);
+
+
